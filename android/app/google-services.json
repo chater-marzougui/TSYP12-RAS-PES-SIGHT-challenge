@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "99492389645",
+    "project_id": "cleaner-tunisia",
+    "storage_bucket": "cleaner-tunisia.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:99492389645:android:faef4fd1fbeb74328e4644",
+        "android_client_info": {
+          "package_name": "com.cleaner_tunisia"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDbT099MB9GJqPGM4OgeDUTRhCnDzsJifo"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
