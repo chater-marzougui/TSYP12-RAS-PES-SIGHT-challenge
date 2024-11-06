@@ -522,7 +522,6 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
       );
     }).toList();
   }
-
   void _showReportDetails(Report report) {
     setState(() {
       _selectedReport = report;
@@ -531,55 +530,102 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
       builder: (context) => DraggableScrollableSheet(
-        initialChildSize: 0.5,
-        minChildSize: 0.3,
-        maxChildSize: 0.9,
-        builder: (context, scrollController) => SingleChildScrollView(
-          controller: scrollController,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.stretch,
-            children: [
-              Image.network(
+        initialChildSize: 0.6,
+        minChildSize: 0.6,
+        maxChildSize: 0.6,
+        builder: (context, scrollController) => Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            // Image section
+            ClipRRect(
+              borderRadius: BorderRadius.circular(12),
+              child: Image.network(
                 report.imageUrl,
-                height: 200,
+                height: 220,
+                width: double.infinity,
                 fit: BoxFit.cover,
                 loadingBuilder: (context, child, loadingProgress) {
                   if (loadingProgress == null) return child;
-                  return Center(child: CircularProgressIndicator());
+                  return Center(
+                    child: CircularProgressIndicator(),
+                  );
                 },
+                errorBuilder: (context, error, stackTrace) => Container(
+                  height: 220,
+                  color: Colors.grey[200],
+                  child: Center(
+                    child: Icon(Icons.broken_image, color: Colors.grey),
+                  ),
+                ),
               ),
-              Padding(
-                padding: const EdgeInsets.all(16.0),
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+            ),
+            const SizedBox(height: 16),
+            // Status and Timestamp Row
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Row(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Text(
-                          'Status: ${report.isTreated ? "Treated" : "Pending"}',
-                          style: TextStyle(
-                            color: report.isTreated ? Colors.green : Colors.orange,
-                            fontWeight: FontWeight.bold,
-                          ),
-                        ),
-                        Text(
-                          report.timestamp.toString().split('.')[0],
-                          style: TextStyle(color: Colors.grey),
-                        ),
-                      ],
+                    Icon(
+                      report.isTreated ? Icons.check_circle : Icons.access_time,
+                      color: report.isTreated ? Colors.green : Colors.orange,
                     ),
-                    const SizedBox(height: 8),
+                    const SizedBox(width: 8),
                     Text(
-                      report.description,
-                      style: Theme.of(context).textTheme.bodyLarge,
+                      report.isTreated ? "Treated" : "Pending",
+                      style: TextStyle(
+                        fontSize: 16,
+                        color: report.isTreated ? Colors.green : Colors.orange,
+                        fontWeight: FontWeight.bold,
+                      ),
                     ),
                   ],
                 ),
+                Text(
+                  report.timestamp.toString().split('.')[0],
+                  style: TextStyle(color: Colors.grey, fontSize: 14),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            // Description
+            Text(
+              "Description",
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.bold,
+                color: Colors.black87,
               ),
-            ],
-          ),
+            ),
+            const SizedBox(height: 8),
+            Text(
+              report.description,
+              style: TextStyle(
+                fontSize: 13,
+                color: Colors.black54,
+                height: 1.4,
+              ),
+            ),
+            const SizedBox(height: 24),
+            // Additional options/actions (if needed)
+            ElevatedButton.icon(
+              onPressed: () {
+                // Placeholder for additional actions, e.g., delete report, mark as treated, etc.
+              },
+              icon: Icon(Icons.edit),
+              label: Text("Edit Report"),
+              style: ElevatedButton.styleFrom(
+                padding: EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(10),
+                ),
+              ),
+            ),
+          ],
         ),
       ),
     );
