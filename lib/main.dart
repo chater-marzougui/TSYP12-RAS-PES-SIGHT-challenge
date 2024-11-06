@@ -1,10 +1,10 @@
 import 'dart:async';
-import 'package:cleaner_tunisia/robot_provider.dart';
+import 'package:cleaner_tunisia/helpers/robot_provider.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
-import 'app_preferences.dart';
+import 'values/app_preferences.dart';
 import 'bottom_nav.dart';
 
 void main() async {

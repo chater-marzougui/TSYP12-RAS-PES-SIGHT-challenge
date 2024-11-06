@@ -1,8 +1,8 @@
-import 'package:cleaner_tunisia/robotDetails.dart';
-import 'package:cleaner_tunisia/robot_provider.dart';
+import 'package:cleaner_tunisia/main_screens/robotDetails.dart';
+import 'package:cleaner_tunisia/helpers/robot_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import 'journey.dart';
+import '../values/classes.dart';
 
 class RobotOverviewPage extends StatefulWidget {
   const RobotOverviewPage({super.key});

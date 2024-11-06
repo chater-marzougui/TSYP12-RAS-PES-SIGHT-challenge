@@ -1,11 +1,11 @@
-import 'package:cleaner_tunisia/reports_screen.dart';
-import 'package:cleaner_tunisia/robots.dart';
+import 'package:cleaner_tunisia/main_screens/reports_screen.dart';
+import 'package:cleaner_tunisia/main_screens/robots.dart';
 import 'package:curved_navigation_bar/curved_navigation_bar.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 
-import 'map.dart';
+import 'main_screens/map.dart';
 
 class HomePage extends StatefulWidget {
   final String userID;
@@ -23,7 +23,7 @@ class _HomePageState extends State<HomePage> {
   final GlobalKey<CurvedNavigationBarState> _navigationKey = GlobalKey();
 
 
-  final List<bool> _pagesUnderNav = [true, true];
+  final List<bool> _pagesUnderNav = [true, true, false];
 
 
   void _onItemTapped(int index) {
@@ -101,6 +101,12 @@ class _HomePageState extends State<HomePage> {
                     icon: Icons.cleaning_services_sharp,
                     index: 1,
                     label: "Robots",
+                    theme: theme,
+                  ),
+                  _buildNavigationItem(
+                    icon: Icons.report,
+                    index: 2,
+                    label: "report",
                     theme: theme,
                   ),
                 ],

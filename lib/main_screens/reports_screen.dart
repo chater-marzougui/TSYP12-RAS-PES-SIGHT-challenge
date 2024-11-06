@@ -1,8 +1,10 @@
+import 'dart:convert';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:firebase_storage/firebase_storage.dart';
+import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:permission_handler/permission_handler.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
 
@@ -21,7 +23,37 @@ class _ReportDirtyPlaceScreenState extends State<ReportDirtyPlaceScreen> {
   bool _isLoading = false;
   final TextEditingController _descriptionController = TextEditingController();
 
+  Future<void> _requestStoragePermission() async {
+    var status = await Permission.storage.request();
+    if (status != PermissionStatus.granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Storage permission required')),
+      );
+    }
+    status = await Permission.camera.request();
+    if (status != PermissionStatus.granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission required')),
+      );
+    }
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    _requestStoragePermission();
+  }
+
   Future<void> _getImage() async {
+    // Request camera permission
+    final status = await Permission.camera.request();
+    if (status != PermissionStatus.granted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Camera permission required')),
+      );
+      return;
+    }
+
     final XFile? image = await _picker.pickImage(
       source: ImageSource.camera,
       maxWidth: 1800,
@@ -42,7 +74,6 @@ class _ReportDirtyPlaceScreenState extends State<ReportDirtyPlaceScreen> {
     );
     return LatLng(position.latitude, position.longitude);
   }
-
   Future<void> _submitReport() async {
     if (_image == null) {
       ScaffoldMessenger.of(context).showSnackBar(
@@ -58,15 +89,27 @@ class _ReportDirtyPlaceScreenState extends State<ReportDirtyPlaceScreen> {
     try {
       // Get current location
       final location = await _getCurrentLocation();
+      final imageBytes = await _image!.readAsBytes();
+      final base64Image = base64Encode(imageBytes);
 
-      // Upload image to Firebase Storage
-      final storageRef = FirebaseStorage.instance
-          .ref()
-          .child('reports')
-          .child('${DateTime.now().millisecondsSinceEpoch}.jpg');
+      // Upload image to Imgur
+      final imageUploadResponse = await http.post(
+        Uri.parse('https://api.imgur.com/3/image'),
+        headers: {
+          'Authorization': 'Client-ID 9f9ec81a2a40523',
+        },
+        body: {
+          'image': base64Image,
+          'type': 'base64',
+        },
+      );
 
-      await storageRef.putFile(_image!);
-      final imageUrl = await storageRef.getDownloadURL();
+      if (imageUploadResponse.statusCode != 200) {
+        throw Exception('Failed to upload image');
+      }
+
+      final imageUploadJson = jsonDecode(imageUploadResponse.body);
+      final imageUrl = imageUploadJson['data']['link'];
 
       // Save report to Firestore
       await FirebaseFirestore.instance.collection('reports').add({
@@ -88,7 +131,6 @@ class _ReportDirtyPlaceScreenState extends State<ReportDirtyPlaceScreen> {
         ScaffoldMessenger.of(context).showSnackBar(
           const SnackBar(content: Text('Report submitted successfully')),
         );
-        Navigator.pop(context);
       }
     } catch (e) {
       if (mounted) {

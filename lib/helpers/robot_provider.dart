@@ -1,7 +1,7 @@
 import 'package:flutter/foundation.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-import 'journey.dart';
+import '../values/classes.dart';
 
 class RobotProvider with ChangeNotifier {
   final FirebaseFirestore _firestore = FirebaseFirestore.instance;

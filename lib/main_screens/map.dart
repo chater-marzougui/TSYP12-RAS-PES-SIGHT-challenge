@@ -1,7 +1,7 @@
 
 import 'dart:async';
 
-import 'package:cleaner_tunisia/robot_provider.dart';
+import 'package:cleaner_tunisia/helpers/robot_provider.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:flutter/material.dart';
@@ -11,8 +11,9 @@ import 'package:latlong2/latlong.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:provider/provider.dart';
 
-import 'cached_tile_provider.dart';
-import 'journey.dart';
+import '../helpers/cached_tile_provider.dart';
+import '../reports_pages.dart';
+import '../values/classes.dart';
 
 class HomeScreen extends StatefulWidget {
   final String userID;
@@ -24,6 +25,8 @@ class HomeScreen extends StatefulWidget {
 
 class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool isMapReady = false;
+  List<Report> _reports = [];
+
   final MapController _mapController = MapController();
   final FirebaseFirestore _db = FirebaseFirestore.instance;
   final List<Color> _journeyColors = [
@@ -42,6 +45,8 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
   bool _isLoading = true;
   List<Journey> _journeys = [];
   List<Robot> _robots = [];
+  Report? _selectedReport;
+
 
   final List<LatLng> _currentJourneyPoints = [];
   StreamSubscription<Position>? _positionStreamSubscription;
@@ -107,6 +112,7 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
     if (_hasLocationPermission && _hasInternetConnection) {
       _startLocationTracking();
       await _fetchJourneys();
+      await _fetchReports();
     }
 
     setState(() {
@@ -376,20 +382,21 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
               MarkerLayer(
                 markers: [
                   // Current position marker
-                  if (_currentPosition != null)
-                    Marker(
-                      point: _currentPosition!,
-                      width: 40,
-                      height: 40,
-                      child: const Icon(
-                        Icons.person_pin_circle,
-                        color: Colors.red,
-                        size: 40.0,
-                      ),
-                    ),
+                  // if (_currentPosition != null)
+                  //   Marker(
+                  //     point: _currentPosition!,
+                  //     width: 40,
+                  //     height: 40,
+                  //     child: const Icon(
+                  //       Icons.person_pin_circle,
+                  //       color: Colors.red,
+                  //       size: 40.0,
+                  //     ),
+                  //   ),
                   // Markers for completed journeys
                   ..._getJourneyMarkers(),
                   ..._getRobotsMarkers(),
+                  ..._getReports(),
                 ],
               ),
             ],
@@ -496,6 +503,103 @@ class _HomeScreenState extends State<HomeScreen> with WidgetsBindingObserver {
         ],
       ),
     );
+  }
+
+  List<Marker> _getReports() {
+    return _reports.map((report) {
+      return Marker(
+        point: report.location,
+        width: 20,
+        height: 20,
+        child: GestureDetector(
+          onTap: () => _showReportDetails(report),
+          child: Icon(
+            Icons.report,
+            color: report.isTreated ? Colors.green : Colors.yellowAccent,
+            size: 20,
+          ),
+        ),
+      );
+    }).toList();
+  }
+
+  void _showReportDetails(Report report) {
+    setState(() {
+      _selectedReport = report;
+    });
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      builder: (context) => DraggableScrollableSheet(
+        initialChildSize: 0.5,
+        minChildSize: 0.3,
+        maxChildSize: 0.9,
+        builder: (context, scrollController) => SingleChildScrollView(
+          controller: scrollController,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.stretch,
+            children: [
+              Image.network(
+                report.imageUrl,
+                height: 200,
+                fit: BoxFit.cover,
+                loadingBuilder: (context, child, loadingProgress) {
+                  if (loadingProgress == null) return child;
+                  return Center(child: CircularProgressIndicator());
+                },
+              ),
+              Padding(
+                padding: const EdgeInsets.all(16.0),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Text(
+                          'Status: ${report.isTreated ? "Treated" : "Pending"}',
+                          style: TextStyle(
+                            color: report.isTreated ? Colors.green : Colors.orange,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        Text(
+                          report.timestamp.toString().split('.')[0],
+                          style: TextStyle(color: Colors.grey),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Text(
+                      report.description,
+                      style: Theme.of(context).textTheme.bodyLarge,
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Future<void> _fetchReports() async {
+    try {
+      final snapshot = await FirebaseFirestore.instance
+          .collection('reports')
+          .orderBy('timestamp', descending: true)
+          .get();
+
+    _reports = snapshot.docs.map((doc) => Report.fromFirestore(doc)).toList();
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(content: Text('Error fetching reports: $e')),
+        );
+      }
+    }
   }
 
   void _zoomIn() {

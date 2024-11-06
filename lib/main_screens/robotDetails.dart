@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:fluttertoast/fluttertoast.dart';
 import 'package:mqtt_client/mqtt_client.dart';
 import 'package:mqtt_client/mqtt_server_client.dart';
-import 'journey.dart';
+import '../values/classes.dart';
 
 class RobotDetailsPage extends StatefulWidget {
   final String robotId;
@@ -31,7 +31,7 @@ class _RobotDetailsPageState extends State<RobotDetailsPage> {
     _client = MqttServerClient('broker.hivemq.com', 'flutter_client_${widget.robotId}');
     _client.port = 1883;
     _client.logging(on: false);
-    _client.onConnected = () => Fluttertoast.showToast(msg: 'Connected to MQTT');
+    _client.onConnected = () => Fluttertoast.showToast(msg: 'MQTT Connected No Clients Subscribed');
     // flutter toast message when disconnected from mqtt_client.
     _client.onDisconnected = () => Fluttertoast.showToast(msg: 'Disconnected from MQTT');
     await _client.connect();

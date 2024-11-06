@@ -1,4 +1,4 @@
-import 'package:cleaner_tunisia/reports_screen.dart';
+import 'package:cleaner_tunisia/main_screens/reports_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:latlong2/latlong.dart';
@@ -26,6 +26,7 @@ class Report {
   factory Report.fromFirestore(DocumentSnapshot doc) {
     final data = doc.data() as Map<String, dynamic>;
     final GeoPoint geoPoint = data['location'] as GeoPoint;
+    print(data.values);
     return Report(
       id: doc.id,
       imageUrl: data['imageUrl'],
